@@ -39,6 +39,8 @@ namespace skylarkgit{
 	template <typename T>
 	void heap<T>::clear(){
 		heapSpace.clear();
+		heapSpace.resize(maxSize+1);
+		currSize=0;
 	}
 
 	template <typename T>
@@ -61,7 +63,7 @@ namespace skylarkgit{
 
 	template <typename T>
 	T heap<T>::pop(){
-		//if(currSize==0) return NULL;
+		if(currSize==0) throw std::logic_error("remove<T> : List is Empty");
 		T tmp(heapSpace[1]);
 		std::swap(heapSpace[1],heapSpace[currSize]);
 		currSize--;
@@ -86,7 +88,7 @@ namespace skylarkgit{
 
 int main(){
 
-	skylarkgit::heap<int> H(1000,skylarkgit::minHeap);
+	skylarkgit::heap<int> H(10000,skylarkgit::maxHeap);
 	for(int i=0;i<100;i++) H.push(rand()%2000);
 	for(int i=0;i<100;i++) {
 		int t=H.pop();
