@@ -24,15 +24,15 @@ namespace skylarkgit{
 		T&			pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode));
 		T			getKernel(size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &lNode,T &rNode));
 	public:
-				segmentTree(size_t size);
+				segmentTree(size_t size,T &defaultVal);
 		void 	push(T &t,size_t a,size_t b,T (*f)(T &currNode,T &thisNode));
 		T 		get	(size_t a,size_t b,T (*f)(T &currNode,T &thisNode));
 
 	};
 
 	template <typename T>
-	segmentTree<T>::segmentTree(size_t size){
-		maxUserSize=--size;
+	segmentTree<T>::segmentTree(size_t size,T &defaultVal){
+		maxUserSize=size-1;
 		maxSize=0;
 		bool flag=false;
 		bitLength=8*sizeof(size);
@@ -46,6 +46,8 @@ namespace skylarkgit{
 			//cout<<"bl="<<bitLength<<" maxSize="<<maxSize<<endl;
 		}
 		treeSpace.resize(((maxSize<<1)|1));	//2n+1
+		int t=((maxSize<<1)|1);
+		while(t--) treeSpace[t]=defaultVal;
 	}
 
 	template <typename T>
@@ -65,14 +67,13 @@ namespace skylarkgit{
 		//if(lIdx<=lLimit&&rIdx>=rLimit)
 		//cout<<" lIdx="<<lIdx<<" rIdx="<<rIdx<<" lLimit="<<lLimit<<" rLimit="<<rLimit<<" index="<<index<<" val="<<treeSpace[index]<<endl;
 		if(lLimit!=rLimit) {
-			if(!(rIdx<ST_rightRangeLeft(lLimit,rLimit))) 
+			if(!(rIdx<ST_rightRangeLeft(lLimit,rLimit)))
 				pushKernel(t,lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
-			if(!(lIdx>ST_leftRangeRight(lLimit,rLimit))) 
+			if(!(lIdx>ST_leftRangeRight(lLimit,rLimit)))
 				pushKernel(t,lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
-			//treeSpace[index]=f(treeSpace[index],);
 			treeSpace[index]=f(treeSpace[ST_left(index)],treeSpace[ST_right(index)]);
 		}else{
-			treeSpace[index]=f(treeSpace[index],t);
+			treeSpace[index]=t;
 		}
 		return treeSpace[index];
 	}
@@ -86,9 +87,9 @@ namespace skylarkgit{
 				return getKernel(lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
 			if(lIdx>ST_leftRangeRight(lLimit,rLimit))
 				return getKernel(lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
-			T a=getKernel(lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
-			T b=getKernel(lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
-				
+			T b=getKernel(lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
+			T a=getKernel(lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
+		
 			return f(a,b);
 		}
 		return treeSpace[index];
@@ -96,11 +97,12 @@ namespace skylarkgit{
 }
 template <typename T>
 inline T maxify(T &a,T &b){
-	return max(a,b);
+	return max(max(a,b),a+b);
 }
 
 int main(){
-	skylarkgit::segmentTree<int> st(10);
+	int p=0;
+	skylarkgit::segmentTree<int> st(10,p);
 	int t=10;
 	while(t--) {int l=rand()%20;st.push(l,t,t,maxify);cout<<t<<"="<<l<<endl;}
 	t=10;
