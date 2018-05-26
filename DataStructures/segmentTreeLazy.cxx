@@ -14,7 +14,7 @@ namespace skylarkgit{
 	#define ST_rightRangeRight(x,y)	(y)
 
 	template <typename T>
-	class segmentTree{
+	class segmentTreeLazy{
 
 	protected:
 		size_t 		maxSize,maxUserSize;
@@ -25,14 +25,20 @@ namespace skylarkgit{
 		T&			pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode));
 		T			getKernel(size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &lNode,T &rNode));
 	public:
-				segmentTree(size_t size,T &defaultVal);
+				segmentTreeLazy(size_t size,T &defaultVal);
+		void	init(size_t size,T &defaultVal);
 		void 	push(T &t,size_t a,size_t b,T (*f)(T &currNode,T &thisNode));
 		T 		get	(size_t a,size_t b,T (*f)(T &currNode,T &thisNode));
 
 	};
 
 	template <typename T>
-	segmentTree<T>::segmentTree(size_t size,T &defaultVal){
+	segmentTreeLazy<T>::segmentTreeLazy(size_t size,T &defaultVal){
+		init(size,defaultVal);	
+	};
+
+	template <typename T>
+	void segmentTreeLazy<T>::init(size_t size,T &defaultVal){
 		defval=defaultVal;
 		maxUserSize=size-1;
 		maxSize=0;
@@ -54,40 +60,46 @@ namespace skylarkgit{
 	}
 
 	template <typename T>
-	void segmentTree<T>::push(T &t,size_t a,size_t b,T (*f)(T &left,T &right)){
+	void segmentTreeLazy<T>::push(T &t,size_t a,size_t b,T (*f)(T &left,T &right)){
 		pushKernel(t,a,b,0,maxUserSize,1,f);
 	}
 
 	template <typename T>
-	T segmentTree<T>::get(size_t a,size_t b,T (*f)(T &currNode,T &thisNode)){
+	T segmentTreeLazy<T>::get(size_t a,size_t b,T (*f)(T &currNode,T &thisNode)){
 		treeSpace[0]=getKernel(a,b,0,maxUserSize,1,f);
 		return treeSpace[0];
 	}
 
 	//***********************KERNEL IMPLEMENTATION***************************//
 	template <typename T>
-	T& segmentTree<T>::pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode)){
+	T& segmentTreeLazy<T>::pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode)){
 		//if(lIdx<=lLimit&&rIdx>=rLimit)
-		//cout<<" lIdx="<<lIdx<<" rIdx="<<rIdx<<" lLimit="<<lLimit<<" rLimit="<<rLimit<<" index="<<index<<" val="<<treeSpace[index]<<endl;
 		if(lLimit!=rLimit) {
+			size_t lrl=ST_leftRangeLeft(lLimit,rLimit),
+				lrr=ST_leftRangeRight(lLimit,rLimit),
+				rrl=ST_rightRangeLeft(lLimit,rLimit),
+				rrr=ST_rightRangeRight(lLimit,rLimit);
+				
 			if(rIdx>=rLimit&&lIdx<=lLimit) update[index]=f(update[index],t);
-			else if(!(rIdx<ST_rightRangeLeft(lLimit,rLimit)))
-				pushKernel(t,lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
-			else if(!(lIdx>ST_leftRangeRight(lLimit,rLimit)))
-				pushKernel(t,lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
-			T a=f(treeSpace[ST_left(index)],update[ST_left(index)]);
-			T b=f(treeSpace[ST_right(index)],update[ST_right(index)]);
-			treeSpace[index]=f(a,b);
+			else{
+				if(!(rIdx<rrl))
+					pushKernel(t,lIdx,rIdx,rrl,rrr,ST_right(index),f);
+				if(!(lIdx>lrr))
+					pushKernel(t,lIdx,rIdx,lrl,lrr,ST_left(index),f);
+				T a=getKernel(lrl,lrr,lrl,lrr,ST_left(index),f);
+				T b=getKernel(rrl,rrr,rrl,rrr,ST_right(index),f);
+				treeSpace[index]=f(a,b);
+			}	
 		}else{
 			treeSpace[index]=f(treeSpace[index],t);
 		}
+		//cout<<"push lIdx="<<lIdx<<" rIdx="<<rIdx<<" lLimit="<<lLimit<<" rLimit="<<rLimit<<" index="<<index<<" val="<<treeSpace[index]<<"+"<<update[index]<<" t="<<t<<endl;
 		return treeSpace[index];
 	}
 	template <typename T>
-	T segmentTree<T>::getKernel(size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &lNode,T &rNode)){
+	T segmentTreeLazy<T>::getKernel(size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &lNode,T &rNode)){
 		T t=defval;
 		//if(lIdx<=lLimit&&rIdx>=rLimit)
-		//cout<<" lIdx="<<lIdx<<" rIdx="<<rIdx<<" lLimit="<<lLimit<<" rLimit="<<rLimit<<" index="<<index<<" val="<<treeSpace[index]<<endl;
 		if(lLimit!=rLimit) {
 			if(rIdx>=rLimit&&lIdx<=lLimit) t=treeSpace[index];
 			else if(rIdx<ST_rightRangeLeft(lLimit,rLimit))
@@ -99,23 +111,40 @@ namespace skylarkgit{
 				T a=getKernel(lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
 				t=f(a,b);
 			}
-			return f(t,update[index]);
+			T k=(min(rLimit,rIdx)-max(lLimit,lIdx)+1)*update[index];
+			//cout<<"getKernel lIdx="<<lIdx<<" rIdx="<<rIdx<<" lLimit="<<lLimit<<" rLimit="<<rLimit<<" index="<<index<<" val="<<treeSpace[index]<<"+"<<update[index]<<" t="<<t<<" k="<<k<<endl;
+			return f(t,k);
 		}
 		return treeSpace[index];
 	}
 }
+#define ll long long
 template <typename T>
-inline T maxify(T &a,T &b){
-	return max(a,b);
+inline T sumify(T &a,T &b){
+	return a+b;
 }
 
 int main(){
-	int p=0;
-	skylarkgit::segmentTree<int> st(10,p);
-	int t=10;
-	while(t--) {int l=rand()%20;st.push(l,t,t,maxify);cout<<t<<"="<<l<<endl;}
-	t=10;
-	while(t--) cout<<"max(0,"<<t<<")="<<st.get(0,t,maxify)<<endl;
-	t=10;
-	while(t--) cout<<"max("<<t<<",9)="<<st.get(t,9,maxify)<<endl;
+	ll p=0;
+	skylarkgit::segmentTreeLazy<ll> stl(10,p);
+	int t=0,n,c,nn,cc,type,from,to;
+	ll upd,res;
+	scanf("%d",&t);
+	while(t--){
+		scanf("%d%d",&n,&c);
+		stl.init(n,p);
+		cc=c;
+		while(cc--){
+			scanf("%d",&type);
+			if(type){
+				scanf("%d%d",&from,&to);
+				--from;--to;
+				printf("%lld\n",stl.get(from,to,sumify));
+			}else{
+				scanf("%d%d%lld",&from,&to,&upd);
+				--from;--to;
+				stl.push(upd,from,to,sumify);
+			}
+		}
+	}
 }
