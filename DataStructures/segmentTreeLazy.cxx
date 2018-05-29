@@ -3,9 +3,6 @@
 using namespace std;
 
 namespace skylarkgit{
-	#define llu long long unsigned	
-	#define PENDING 	true
-	#define COMPLETE	false
 	#define ST_left(x)	((x)<<1)
 	#define ST_right(x)	(((x)<<1)|1)
 	#define ST_leftRangeLeft(x,y)	(x)
@@ -22,7 +19,7 @@ namespace skylarkgit{
 		std::vector<T> 	treeSpace;
 		std::vector<T> 	update;
 		T defval;
-		T&			pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode));
+		void		pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode));
 		T			getKernel(size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &lNode,T &rNode));
 	public:
 				segmentTreeLazy(size_t size,T &defaultVal);
@@ -72,50 +69,35 @@ namespace skylarkgit{
 
 	//***********************KERNEL IMPLEMENTATION***************************//
 	template <typename T>
-	T& segmentTreeLazy<T>::pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode)){
+	void segmentTreeLazy<T>::pushKernel(T &t,size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &currNode,T &thisNode)){
+		if(rIdx<lLimit||lIdx>rLimit) return;
+		if(lLimit==rLimit) {treeSpace[index]=f(treeSpace[index],t);return;}
+		if(rIdx>=rLimit&&lIdx<=lLimit) {update[index]=f(update[index],t);return;}
 		//if(lIdx<=lLimit&&rIdx>=rLimit)
-		if(lLimit!=rLimit) {
-			size_t lrl=ST_leftRangeLeft(lLimit,rLimit),
+		size_t lrl=ST_leftRangeLeft(lLimit,rLimit),
 				lrr=ST_leftRangeRight(lLimit,rLimit),
 				rrl=ST_rightRangeLeft(lLimit,rLimit),
 				rrr=ST_rightRangeRight(lLimit,rLimit);
-				
-			if(rIdx>=rLimit&&lIdx<=lLimit) update[index]=f(update[index],t);
-			else{
-				if(!(rIdx<rrl))
-					pushKernel(t,lIdx,rIdx,rrl,rrr,ST_right(index),f);
-				if(!(lIdx>lrr))
-					pushKernel(t,lIdx,rIdx,lrl,lrr,ST_left(index),f);
-				T a=getKernel(lrl,lrr,lrl,lrr,ST_left(index),f);
-				T b=getKernel(rrl,rrr,rrl,rrr,ST_right(index),f);
-				treeSpace[index]=f(a,b);
-			}	
-		}else{
-			treeSpace[index]=f(treeSpace[index],t);
-		}
+		pushKernel(t,lIdx,rIdx,rrl,rrr,ST_right(index),f);
+		pushKernel(t,lIdx,rIdx,lrl,lrr,ST_left(index),f);
+		T a=getKernel(lrl,lrr,lrl,lrr,ST_left(index),f);
+		T b=getKernel(rrl,rrr,rrl,rrr,ST_right(index),f);
+		treeSpace[index]=f(a,b);
 		//cout<<"push lIdx="<<lIdx<<" rIdx="<<rIdx<<" lLimit="<<lLimit<<" rLimit="<<rLimit<<" index="<<index<<" val="<<treeSpace[index]<<"+"<<update[index]<<" t="<<t<<endl;
-		return treeSpace[index];
 	}
 	template <typename T>
 	T segmentTreeLazy<T>::getKernel(size_t lIdx,size_t rIdx,size_t lLimit,size_t rLimit,size_t index,T (*f)(T &lNode,T &rNode)){
-		T t=defval;
-		//if(lIdx<=lLimit&&rIdx>=rLimit)
-		if(lLimit!=rLimit) {
-			if(rIdx>=rLimit&&lIdx<=lLimit) t=treeSpace[index];
-			else if(rIdx<ST_rightRangeLeft(lLimit,rLimit))
-				t=getKernel(lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
-			else if(lIdx>ST_leftRangeRight(lLimit,rLimit))
-				t=getKernel(lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
-			else {
-				T b=getKernel(lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
-				T a=getKernel(lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
-				t=f(a,b);
-			}
-			T k=(min(rLimit,rIdx)-max(lLimit,lIdx)+1)*update[index];
-			//cout<<"getKernel lIdx="<<lIdx<<" rIdx="<<rIdx<<" lLimit="<<lLimit<<" rLimit="<<rLimit<<" index="<<index<<" val="<<treeSpace[index]<<"+"<<update[index]<<" t="<<t<<" k="<<k<<endl;
-			return f(t,k);
+		if(rIdx<lLimit||lIdx>rLimit) return defval;
+		if(lLimit==rLimit) return treeSpace[index];
+		T t;
+		if(rIdx>=rLimit&&lIdx<=lLimit) t=treeSpace[index];
+		else {
+			T b=getKernel(lIdx,rIdx,ST_rightRangeLeft(lLimit,rLimit),ST_rightRangeRight(lLimit,rLimit),ST_right(index),f);
+			T a=getKernel(lIdx,rIdx,ST_leftRangeLeft(lLimit,rLimit),ST_leftRangeRight(lLimit,rLimit),ST_left(index),f);
+			t=f(a,b);
 		}
-		return treeSpace[index];
+		T k=(min(rLimit,rIdx)-max(lLimit,lIdx)+1)*update[index];
+		return f(t,k);
 	}
 }
 #define ll long long
