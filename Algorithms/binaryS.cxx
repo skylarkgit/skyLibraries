@@ -3,12 +3,6 @@
 
 namespace skylarkgit{
 	#define llu long long unsigned	
-	/*template <class Iterator,typename T>
-	Iterator binaryS(const Iterator &first,const Iterator &last,T &k){
-		if(first==last) return first;
-		Iterator mid=((first+last)>>1);
-		return mid;
-	}*/
 	template <typename T>
 	size_t binaryS(std::vector<T> obj,size_t Start,size_t End,T &k){
 		size_t mid=((Start+End-1)>>1);
