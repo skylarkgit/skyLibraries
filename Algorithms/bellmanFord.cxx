@@ -7,6 +7,8 @@ namespace skylarkgit{
 	#define ll long long
 	template <typename T>
 	void inf(T &t){t=std::numeric_limits<T>::max();}
+	template <typename T>
+	bool isInf(const T &t){return (t==std::numeric_limits<T>::max());}
 	class Node;
 	class Edge{
 	public:
@@ -26,6 +28,10 @@ namespace skylarkgit{
 		Node(){inf(distance);}
 		void addEdge(size_t toIndex,ll w){edges.push_back(Edge(toIndex,w));}
 		void addEdge(Node *to,ll w){edges.push_back(Edge(to,w));}
+		bool relax(size_t srcI,ll newDist){
+			if(newDist<distance) {distance=newDist;srcIndex=srcI;return true;}
+			return false;
+		}
 	};
 	
 	class RandomAccessGraph{
@@ -42,60 +48,27 @@ namespace skylarkgit{
 			while(i--) links[i].resize(n);
 		}
 		void addEdge(size_t from,size_t to,ll w){links[from][to]+=w;}
-		bool bfs(size_t src=0,size_t to=-1){
-			bool result=false;
+		bool bellmanFord(size_t src=0){
 			resetNodes();
-			flags.resize(size);
-			std::queue<size_t> q;
-			size_t curr=0;
-			q.push(src);
 			nodes[src].distance=0;
-			flags[src]=true;
-			while(!q.empty()){
-				curr=q.front();
-				q.pop();
-				cout<<curr<<endl;
-				for(int i=0;i<size;i++){
-					if(links[curr][i]&&flags[i]==false){
-						flags[i]=true;
-						q.push(i);
-						nodes[i].distance=nodes[curr].distance+1;
-						nodes[i].srcIndex=curr;
-						if(i==to) result=true;
+			int t=size-1;
+			while(t--){
+				for(size_t i=0;i<size;i++){
+					if(!isInf(nodes[i].distance))
+					for(size_t j=0;j<size;j++){
+						if(links[i][j])
+							nodes[j].relax(i,links[i][j]+nodes[i].distance);
 					}
 				}
 			}
-			flags.clear();
-			return result;
-		}
-		bool dfs(size_t src=0,size_t to=-1){
-			bool result=false;
-			resetNodes();
-			flags.resize(size);
-			std::stack<size_t> st;
-			size_t curr=0;
-			st.push(src);
-			nodes[src].distance=0;
-			flags[src]=true;
-			while(!st.empty()){
-				curr=st.top();
-				st.pop();
-				cout<<curr<<endl;
-				//OPTIMIZATION CAN BE FORCED HERE BY SKIPPING PREVOIUS PROGRESS
-				for(int i=0;i<size;i++){
-					if(links[curr][i]&&flags[i]==false){
-						flags[i]=true;
-						st.push(curr);
-						st.push(i);
-						nodes[i].distance=nodes[curr].distance+1;
-						nodes[i].srcIndex=curr;
-						if(i==to) result=true;
-						break;
-					}
+			for(size_t i=0;i<size;i++){
+				if(!isInf(nodes[i].distance))
+				for(size_t j=0;j<size;j++){
+					if(links[i][j]&&nodes[j].relax(i,links[i][j]+nodes[i].distance))
+						return false;
 				}
 			}
-			flags.clear();
-			return result;
+			return true;
 		}
 		void resetNodes(){
 			for(auto& n :nodes){
@@ -103,6 +76,13 @@ namespace skylarkgit{
 				inf(n.distance);
 			}
 		}
+		void printLinks(){
+            for(int i=0;i<size;i++){
+                for(int j=0;j<size;j++)
+                    cout<<links[i][j]<<" ";
+                cout<<endl;
+            }
+        }
 	};
 }
 int main(){
@@ -113,9 +93,8 @@ int main(){
 	G.addEdge(1,5,30);
 	G.addEdge(4,3,40);
 	G.addEdge(2,0,50);
+	G.addEdge(0,3,20);
 	//G.bfs();
-	G.bfs(2,3);
-	cout<<"distance from 2 to 3 is "<<G.nodes[3].distance<<endl;
-	G.dfs(2,3);
+	G.bellmanFord(2);
 	cout<<"distance from 2 to 3 is "<<G.nodes[3].distance<<endl;
 }

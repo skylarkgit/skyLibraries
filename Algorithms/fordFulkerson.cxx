@@ -103,6 +103,13 @@ namespace skylarkgit{
 				n.distance=inf<ll>();
 			}
 		}
+		void printLinks(){
+            for(int i=0;i<size;i++){
+                for(int j=0;j<size;j++)
+                    cout<<links[i][j]<<" ";
+                cout<<endl;
+            }
+        }
 	};
 
 	ll maxFlow(RandomAccessGraph &G,size_t src,size_t sink){
@@ -153,6 +160,7 @@ int main(){
 	G.dfs(2,3);
 	cout<<"distance from 2 to 3 is "<<G.nodes[3].distance<<endl;
 	*/
+	G.printLinks();
 	cout<<"maxFlow is "<<maxFlow(G,0,7)<<endl;
 
 	long long res=0;

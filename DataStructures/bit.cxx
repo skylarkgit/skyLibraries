@@ -3,9 +3,6 @@
 using namespace std;
 
 namespace skylarkgit{
-	#define llu long long unsigned	
-	#define PENDING 	true
-	#define COMPLETE	false
 	#define BIT_parent(x)	(((x)^((~x)+1))&x)
 	#define BIT_next(x)		(((x)&((~x)+1))+x)
 
@@ -13,8 +10,7 @@ namespace skylarkgit{
 	class fenwickTree{
 
 	protected:
-		size_t 		maxSize,maxUserSize;
-		size_t 		bitLength;
+		size_t 		maxSize;
 		std::vector<T> 	treeSpace;
 	public:
 				fenwickTree(size_t size,T &defaultVal);
@@ -24,7 +20,6 @@ namespace skylarkgit{
 
 	template <typename T>
 	fenwickTree<T>::fenwickTree(size_t size,T &defaultVal){
-		maxUserSize=size;
 		maxSize=size;
 		treeSpace.resize(maxSize+1);
 		int t=maxSize+1;

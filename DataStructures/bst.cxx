@@ -1,5 +1,7 @@
 #include<bits/stdc++.h>
 
+int height;
+
 namespace skylarkgit{
 
 	template <typename T>
@@ -28,9 +30,11 @@ namespace skylarkgit{
 		void traverse(){traverse(head);}
 		void traverse(node<T> *temp){
 			if(temp==NULL) return;
+			height++;
 			traverse(temp->left);
-			std::cout<<temp->data<<std::endl;
+			std::cout<<temp->data<<"("<<height<<")"<<std::endl;
 			traverse(temp->right);
+			height--;
 		}
 		void clear(){clear(head);}
 		void clear(node<T> *temp){
@@ -91,6 +95,7 @@ int main(int argc, char const *argv[])
 		tree.insert(k);
 	}
 	tree.remove(92);
+	height=0;
 	tree.traverse();
 	tree.exists(15,temp);
 	cout<<"data="<<(temp->data)<<endl;
