@@ -2,7 +2,6 @@
 using namespace std;
 #define ll long long 
 
-
 ll gcdExtended(ll a, ll m, ll &x, ll &y) 
 { 
     if (m == 0) 
@@ -20,14 +19,16 @@ ll gcdExtended(ll a, ll m, ll &x, ll &y)
     return gcd; 
 } 
 
+ll inverseModulus(ll a, ll b) {
+	ll m = a;
+	gcdExtended(a, b, a, b);
+	return (a + m) % m;
+}
+
 int main(int argc, char const *argv[])
 {
 	
-	ll x = 1000000007, y = 10000;
-
-	gcdExtended(x, y, x, y);
-
-	cout<< x << " " << y<<endl;
-
+	ll x = 1000000007, y = 4;
+	cout<<inverseModulus(x, y)<<endl;
 	return 0;
 }
