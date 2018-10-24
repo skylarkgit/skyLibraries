@@ -6,5 +6,6 @@ public interface Heap<Type extends Comparable<Type>> {
 	Type pop();
 	Type top();
 	int size();
+	boolean isEmpty();
 
 }

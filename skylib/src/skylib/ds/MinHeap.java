@@ -1,5 +1,7 @@
 package skylib.ds;
 
+import java.util.List;
+
 public class MinHeap<Type extends Comparable<Type>> implements Heap<Type> {
 
 	private Object[] storage;
@@ -34,29 +36,32 @@ public class MinHeap<Type extends Comparable<Type>> implements Heap<Type> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Type pop() {
+		if (isEmpty())
+			return null;
 		Type min = (Type) storage[0];
+		storage[0] = storage[size-1]; 
 		int index = 0;
-		while(index<(size-1)) {
-			int childIndex = ((index+1)>>1) - 1;
+		while(index < (size-1)) {
+			int childIndex = ((index+1)<<1) - 1;
 			if (((Type)storage[index]).compareTo((Type) storage[childIndex]) > 0
-					|| ((Type)storage[index]).compareTo((Type) storage[childIndex + 1]) > 0){
-				if (((Type)storage[childIndex]).compareTo((Type) storage[childIndex + 1]) < 0)
-					childIndex = childIndex;
-				else
+					|| (childIndex + 1 < size && ((Type)storage[index]).compareTo((Type) storage[childIndex + 1]) > 0)){
+				
+				if (childIndex + 1 < size && ((Type)storage[childIndex]).compareTo((Type) storage[childIndex + 1]) > 0)
 					childIndex = childIndex + 1;
 				
 				Object temp;
 				temp = storage[childIndex];
-				storage[index] = storage[childIndex];
-				storage[childIndex] = temp;
+				storage[childIndex] = storage[index];
+				storage[index] = temp;
 				index = childIndex;
-			}
+			} else
+				break;
 		}
-		
+		size--;
 		return min;
-		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Type top() {
 		return (Type) storage[0];
@@ -67,4 +72,8 @@ public class MinHeap<Type extends Comparable<Type>> implements Heap<Type> {
 		return size;
 	}
 
+	@Override
+	public boolean isEmpty() {
+		return size == 0;
+	}
 }
