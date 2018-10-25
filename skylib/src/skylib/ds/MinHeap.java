@@ -43,7 +43,7 @@ public class MinHeap<Type extends Comparable<Type>> implements Heap<Type> {
 		int index = 0;
 		while(index < (size-1)) {
 			int childIndex = ((index+1)<<1) - 1;
-			if (((Type)storage[index]).compareTo((Type) storage[childIndex]) > 0
+			if (childIndex < size && ((Type)storage[index]).compareTo((Type) storage[childIndex]) > 0
 					|| (childIndex + 1 < size && ((Type)storage[index]).compareTo((Type) storage[childIndex + 1]) > 0)){
 				
 				if (childIndex + 1 < size && ((Type)storage[childIndex]).compareTo((Type) storage[childIndex + 1]) > 0)
